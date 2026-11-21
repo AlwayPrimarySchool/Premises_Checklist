@@ -33,9 +33,6 @@
   .action b { display:block; font-size:20px; }
   .action span { font-size:14px; opacity:.8; }
   input[type=file] { display:none; }
-  .toggle { display:flex; align-items:center; gap:12px; margin-top:12px; padding:14px 16px; background:var(--panel); border:2px solid var(--line); cursor:pointer; font-size:16px; }
-  .toggle input { width:24px; height:24px; accent-color: var(--green); flex:none; margin:0; }
-  .toggle small { display:block; color:var(--muted); font-size:13px; }
   .count { margin: 22px 0 8px; font-size:15px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
   .count button { font:inherit; font-size:13px; text-transform:none; letter-spacing:0; background:none; border:0; color:var(--muted); text-decoration:underline; cursor:pointer; padding:0; }
   .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:10px; }
@@ -58,6 +55,8 @@
   .sheet img { width:100%; max-height:45vh; object-fit:contain; background:#000; }
   .sheet button { font:inherit; font-size:18px; font-weight:700; padding:15px; border:2px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
   .sheet button.go { background:var(--green); border-color:var(--green); color:#fff; }
+  .sheet button.bad { color:var(--red); border-color:var(--red); }
+  .cell.gone img { opacity:.35; filter:grayscale(1); }
   @keyframes up { from { transform: translateY(40px); opacity:0; } to { transform:none; opacity:1; } }
 
   /* Drawing on a photo */
@@ -94,9 +93,9 @@
     </label>
     <input type="file" id="libInput" accept="image/*" multiple>
   </div>
-  <label class="toggle"><input type="checkbox" id="drawFirst"><span>Draw on each photo before adding it<small>Circle a problem, point to it or write a note on it</small></span></label>
 
   <div class="count" id="count">Photos added</div>
+  <p class="hint" id="addedHint" style="display:none">Tap a photo to draw on it or take it out of the report.</p>
   <div class="empty" id="empty">No photos yet</div>
   <div class="grid" id="grid"></div>
   <div class="note" id="status"></div>
@@ -110,8 +109,9 @@
 <footer><button id="doneBtn" type="button">Done</button></footer>
 <script>
 (function () {
-  // Opened by the checklist app in a popup. Each photo is shrunk (and drawn
-  // on, if wanted) and handed straight back to the app with postMessage.
+  // Opened by the checklist app in a popup. Each photo is shrunk and handed
+  // straight back to the app with postMessage. Tapping an added photo lets
+  // you draw on it or take it back out (while the report isn't saved yet).
   // The last 20 are also kept on this device (IndexedDB) so they can be
   // added again later, for example after losing signal. No server is involved.
   var params = new URLSearchParams(location.search);
@@ -119,14 +119,12 @@
   var MAX_DIM = 1600, QUALITY = 0.8, KEEP = 20;
   var grid = document.getElementById('grid'), statusEl = document.getElementById('status');
   var emptyEl = document.getElementById('empty'), countEl = document.getElementById('count');
-  var drawFirst = document.getElementById('drawFirst');
   var sent = 0;
+  var shown = {};   // photos added this time, by id: { cell, img, badge, data, thumb, removed }
 
   // Works offline once opened with signal at least once.
   if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {} }
 
-  try { drawFirst.checked = localStorage.getItem('pc-draw-first') === '1'; } catch (e) {}
-  drawFirst.addEventListener('change', function () { try { localStorage.setItem('pc-draw-first', drawFirst.checked ? '1' : '0'); } catch (e) {} });
 
   // ---------- photos kept on this device ----------
   var dbP = null;
@@ -186,24 +184,13 @@
   });
 
   function chooseRecent(p) {
-    var bg = document.createElement('div'); bg.className = 'sheet-bg';
-    var sh = document.createElement('div'); sh.className = 'sheet';
-    var img = new Image(); img.src = 'data:image/jpeg;base64,' + p.data;
-    var add = document.createElement('button'); add.className = 'go'; add.textContent = 'Add this photo';
-    var draw = document.createElement('button'); draw.textContent = 'Draw on it, then add';
-    var cancel = document.createElement('button'); cancel.textContent = 'Cancel';
-    sh.appendChild(img); sh.appendChild(add); sh.appendChild(draw); sh.appendChild(cancel);
-    bg.appendChild(sh); document.body.appendChild(bg);
-    function close() { bg.remove(); }
-    bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
-    cancel.addEventListener('click', close);
-    add.addEventListener('click', function () { close(); deliver(Promise.resolve({ data: p.data, thumb: p.thumb }), false); });
-    draw.addEventListener('click', function () {
-      close();
-      loadImage('data:image/jpeg;base64,' + p.data).then(function (im) {
-        openEditor(im, function (res) { deliver(Promise.resolve(res), true); });
-      });
-    });
+    sheet('data:image/jpeg;base64,' + p.data, [
+      { text: 'Add this photo', cls: 'go', fn: function () { deliver(Promise.resolve({ data: p.data, thumb: p.thumb }), false); } },
+      { text: 'Draw on it, then add', fn: function () {
+        loadImage('data:image/jpeg;base64,' + p.data).then(function (im) { openEditor(im, function (res) { deliver(Promise.resolve(res), true); }); });
+      } },
+      { text: 'Delete from this device', cls: 'bad', fn: function () { tx('readwrite', function (st) { st.delete(p.id); }).then(showRecent); } }
+    ]);
   }
 
   // ---------- preparing a photo ----------
@@ -229,45 +216,101 @@
     return c;
   }
 
+  function newId() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
+  function updateCount() {
+    countEl.textContent = sent ? sent + (sent === 1 ? ' photo added' : ' photos added') : 'Photos added';
+    document.getElementById('doneBtn').textContent = sent ? 'Done (' + sent + ')' : 'Done';
+    document.getElementById('addedHint').style.display = Object.keys(shown).some(function (k) { return !shown[k].removed; }) ? '' : 'none';
+  }
+
   /** Adds one photo to the report (and keeps it on the device). */
   function deliver(promise, store) {
     emptyEl.style.display = 'none';
+    var id = newId();
     var cell = document.createElement('div'); cell.className = 'cell';
     var badge = document.createElement('div'); badge.className = 'badge'; badge.textContent = 'Preparing…';
     cell.appendChild(badge); grid.insertBefore(cell, grid.firstChild);
     promise.then(function (res) {
       var img = new Image(); img.src = res.thumb; cell.insertBefore(img, badge);
-      if (store) keep({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 8), at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
+      if (store) keep({ id: id, at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
       if (!window.opener || !appOrigin) throw new Error('Lost connection to the checklist. The photo is kept under Recent photos: close this window, open Add photos from the checklist again and tap it.');
-      window.opener.postMessage({ type: 'pc-photo', mime: 'image/jpeg', data: res.data }, appOrigin);
+      window.opener.postMessage({ type: 'pc-photo', id: id, mime: 'image/jpeg', data: res.data }, appOrigin);
+      shown[id] = { cell: cell, img: img, badge: badge, data: res.data, thumb: res.thumb, removed: false };
+      cell.classList.add('tap');
+      cell.addEventListener('click', function () { if (!shown[id].removed) chooseAdded(id); });
       badge.textContent = 'Added'; badge.className = 'badge ok'; sent++;
-      countEl.textContent = sent + (sent === 1 ? ' photo added' : ' photos added');
+      updateCount();
       statusEl.textContent = '';
-      document.getElementById('doneBtn').textContent = 'Done (' + sent + ')';
       if (navigator.vibrate) navigator.vibrate(15);
     }).catch(function (e) {
-      if (e && e.cancelled) { cell.remove(); if (!grid.children.length) emptyEl.style.display = ''; return; }
       badge.textContent = 'Not added'; badge.className = 'badge err';
       statusEl.textContent = (e && e.message) || 'Something went wrong. Please try again.';
     });
   }
 
-  // Photos picked together go through the drawing screen one at a time.
-  var drawQueue = [], drawing = false;
-  function nextDraw() {
-    if (drawing || !drawQueue.length) return;
-    drawing = true;
-    var file = drawQueue.shift();
-    var url = URL.createObjectURL(file);
-    loadImage(url).then(function (img) {
-      URL.revokeObjectURL(url);
-      openEditor(img, function (res) { deliver(Promise.resolve(res), true); drawing = false; nextDraw(); },
-        function () { drawing = false; nextDraw(); }, drawQueue.length);
-    }).catch(function (e) { URL.revokeObjectURL(url); deliver(Promise.reject(e), false); drawing = false; nextDraw(); });
+  // Changes to a photo already added are confirmed by the checklist, which
+  // only allows them while the photo hasn't been saved in the report yet.
+  var waiting = {};
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || d.type !== 'pc-photo-done' || ev.origin !== appOrigin || !waiting[d.id]) return;
+    var w = waiting[d.id]; delete waiting[d.id]; clearTimeout(w.timer); w.done(!!d.ok, false);
+  });
+  function ask(msg, done) {
+    if (!window.opener || !appOrigin) { done(false, true); return; }
+    waiting[msg.id] = { done: done, timer: setTimeout(function () { if (waiting[msg.id]) { delete waiting[msg.id]; done(false, true); } }, 4000) };
+    window.opener.postMessage(msg, appOrigin);
+  }
+  var TOO_LATE = 'That photo has already been saved in the report, so it can’t be changed from here. You can remove it in the checklist.';
+  var NO_ANSWER = 'The checklist didn’t answer. Is it still open? Nothing was changed.';
+
+  /** A sheet that slides up with the photo and some choices. */
+  function sheet(imgSrc, buttons) {
+    var bg = document.createElement('div'); bg.className = 'sheet-bg';
+    var sh = document.createElement('div'); sh.className = 'sheet';
+    var img = new Image(); img.src = imgSrc; sh.appendChild(img);
+    function close() { bg.remove(); }
+    buttons.concat([{ text: 'Cancel' }]).forEach(function (b) {
+      var el = document.createElement('button'); el.type = 'button'; el.textContent = b.text; if (b.cls) el.className = b.cls;
+      el.addEventListener('click', function () { close(); if (b.fn) b.fn(); });
+      sh.appendChild(el);
+    });
+    bg.appendChild(sh); document.body.appendChild(bg);
+    bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
+  }
+
+  /** A photo already added: draw on it, or take it back out of the report. */
+  function chooseAdded(id) {
+    var p = shown[id];
+    sheet('data:image/jpeg;base64,' + p.data, [
+      { text: 'Draw on it', cls: 'go', fn: function () {
+        loadImage('data:image/jpeg;base64,' + p.data).then(function (im) {
+          openEditor(im, function (res) {
+            p.badge.textContent = 'Updating…'; p.badge.className = 'badge';
+            ask({ type: 'pc-photo-replace', id: id, mime: 'image/jpeg', data: res.data }, function (ok, noAnswer) {
+              p.badge.textContent = 'Added'; p.badge.className = 'badge ok';
+              if (ok) {
+                p.data = res.data; p.thumb = res.thumb; p.img.src = res.thumb;
+                keep({ id: id, at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
+                statusEl.textContent = '';
+              } else statusEl.textContent = noAnswer ? NO_ANSWER : TOO_LATE;
+            });
+          });
+        });
+      } },
+      { text: 'Remove from the report', cls: 'bad', fn: function () {
+        ask({ type: 'pc-photo-remove', id: id }, function (ok, noAnswer) {
+          if (ok) {
+            p.removed = true; p.cell.classList.add('gone'); p.cell.classList.remove('tap');
+            p.badge.textContent = 'Removed'; p.badge.className = 'badge err';
+            sent--; updateCount(); statusEl.textContent = '';
+          } else statusEl.textContent = noAnswer ? NO_ANSWER : TOO_LATE;
+        });
+      } }
+    ]);
   }
 
   function handle(file) {
-    if (drawFirst.checked) { drawQueue.push(file); nextDraw(); return; }
     var url = URL.createObjectURL(file);
     deliver(loadImage(url).then(function (img) { URL.revokeObjectURL(url); return toResult(shrunkCanvas(img)); }), true);
   }
@@ -280,7 +323,7 @@
   document.getElementById('doneBtn').addEventListener('click', function () { window.close(); });
 
   // ---------- drawing on a photo ----------
-  // Pen, ring (circle round something), pointer line with a head, and text.
+  // Pen, ring (circle round something) and a pointer line with a head.
   // Marks are kept as a list so Undo can take the last one off.
   function openEditor(img, onDone, onCancel, more) {
     var base = shrunkCanvas(img);
@@ -289,10 +332,10 @@
 
     var ed = document.createElement('div'); ed.className = 'ed';
     ed.innerHTML =
-      '<div class="ed-top"><button type="button" data-a="cancel">Cancel</button><b>Draw on the photo</b><button type="button" class="go" data-a="done">' + (more ? 'Add, next photo' : 'Add photo') + '</button></div>' +
+      '<div class="ed-top"><button type="button" data-a="cancel">Cancel</button><b>Draw on the photo</b><button type="button" class="go" data-a="done">' + (more ? 'Add, next photo' : 'Done') + '</button></div>' +
       '<div class="ed-stage"><canvas></canvas></div>' +
       '<div class="ed-tools">' +
-        '<button type="button" data-t="pen" class="on">Pen</button><button type="button" data-t="ring">Circle</button><button type="button" data-t="pointer">Pointer</button><button type="button" data-t="text">Text</button>' +
+        '<button type="button" data-t="pen" class="on">Pen</button><button type="button" data-t="ring">Circle</button><button type="button" data-t="pointer">Pointer</button>' +
         '<span class="sep"></span>' +
         ['#ff2d2d', '#ffd400', '#20c060', '#ffffff', '#111111'].map(function (c, i) { return '<button type="button" class="sw' + (i ? '' : ' on') + '" data-c="' + c + '" style="background:' + c + '" aria-label="Colour"></button>'; }).join('') +
         '<span class="sep"></span><button type="button" data-a="undo">Undo</button><button type="button" data-a="clear">Clear</button>' +
@@ -320,11 +363,6 @@
       } else if (m.t === 'pointer') {
         c.beginPath(); c.moveTo(m.x1, m.y1); c.lineTo(m.x2, m.y2); c.stroke();
         if (Math.hypot(m.x2 - m.x1, m.y2 - m.y1) > m.w * 2) head(c, m.x1, m.y1, m.x2, m.y2, m.w);
-      } else if (m.t === 'text') {
-        var size = m.w * 7;
-        c.font = 'bold ' + size + 'px Calibri, "Segoe UI", Arial, sans-serif'; c.textBaseline = 'top';
-        c.lineWidth = size / 6; c.strokeStyle = m.c === '#111111' ? '#ffffff' : '#000000';
-        c.strokeText(m.s, m.x1, m.y1); c.fillText(m.s, m.x1, m.y1);
       }
     }
     function paint() {
@@ -341,11 +379,6 @@
     cv.addEventListener('pointerdown', function (e) {
       e.preventDefault();
       var p = at(e);
-      if (tool === 'text') {
-        var s = prompt('Type the text to put on the photo');
-        if (s && s.trim()) { marks.push({ t: 'text', c: colour, w: unit, x1: p[0], y1: p[1], s: s.trim() }); paint(); }
-        return;
-      }
       try { cv.setPointerCapture(e.pointerId); } catch (x) {}
       cur = tool === 'pen' ? { t: 'pen', c: colour, w: unit * 1.2, p: [p] } : { t: tool, c: colour, w: unit * 1.2, x1: p[0], y1: p[1], x2: p[0], y2: p[1] };
       paint();
