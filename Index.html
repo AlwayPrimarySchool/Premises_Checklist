@@ -23,7 +23,7 @@
   header { background:var(--green); color:#fff; padding:18px 16px; }
   header h1 { margin:0; font-size:22px; }
   header p { margin:2px 0 0; opacity:.9; font-size:15px; }
-  main { max-width: 620px; margin: 0 auto; padding: 16px 16px 110px; }
+  main { max-width: 620px; margin: 0 auto; padding: 16px 16px 120px; }
   .actions { display:grid; gap:12px; }
   .action { display:flex; align-items:center; gap:16px; width:100%; padding:20px; background:var(--panel); border:2px solid var(--line);
     font: inherit; color:inherit; cursor:pointer; text-align:left; transition: transform .15s var(--ease), border-color .15s; }
@@ -36,49 +36,57 @@
   .count { margin: 22px 0 8px; font-size:15px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
   .count button { font:inherit; font-size:13px; text-transform:none; letter-spacing:0; background:none; border:0; color:var(--muted); text-decoration:underline; cursor:pointer; padding:0; }
   .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:10px; }
-  .cell { position:relative; aspect-ratio:1; background:var(--line); overflow:hidden; animation: pop .3s var(--ease); }
+  .cell { position:relative; aspect-ratio:1; background:var(--line); overflow:hidden; animation: pop .3s var(--ease); cursor:pointer; padding:0; border:0; }
   .cell img { width:100%; height:100%; object-fit:cover; display:block; }
-  .cell.tap { cursor:pointer; }
   .badge { position:absolute; left:0; right:0; bottom:0; padding:5px; font-size:13px; font-weight:700; text-align:center; color:#fff; background:rgba(0,0,0,.6); }
-  .badge.ok { background:var(--green); } .badge.err { background:var(--red); }
+  .badge.err { background:var(--red); }
   .when { position:absolute; left:0; top:0; padding:3px 6px; font-size:11px; font-weight:700; color:#fff; background:rgba(0,0,0,.55); }
+  .drawn { position:absolute; right:0; top:0; padding:3px 6px; font-size:11px; font-weight:700; color:#fff; background:var(--green); }
   .empty { padding:28px 16px; text-align:center; color:var(--muted); border:2px dashed var(--line); }
   .hint { color:var(--muted); font-size:14px; margin:0 0 8px; }
   .note { margin-top:14px; color:var(--red); font-weight:700; min-height:1em; }
   footer { position:fixed; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); background:var(--panel); border-top:1px solid var(--line); }
   footer button { display:block; width:100%; max-width:588px; margin:0 auto; padding:16px; font:inherit; font-size:18px; font-weight:700; color:#fff; background:var(--green-dark); border:0; cursor:pointer; }
+  footer button.idle { background:var(--line); color:var(--muted); }
   @keyframes pop { from { opacity:0; transform: scale(.85); } to { opacity:1; transform:none; } }
 
-  /* Choice for a recent photo */
+  /* Choices for a photo */
   .sheet-bg { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; display:flex; align-items:flex-end; justify-content:center; }
   .sheet { width:100%; max-width:620px; background:var(--panel); padding:16px 16px calc(16px + env(safe-area-inset-bottom)); display:grid; gap:10px; animation: up .25s var(--ease); }
   .sheet img { width:100%; max-height:45vh; object-fit:contain; background:#000; }
+  .sheet p { margin:2px 0 4px; font-size:18px; font-weight:700; text-align:center; }
   .sheet button { font:inherit; font-size:18px; font-weight:700; padding:15px; border:2px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
   .sheet button.go { background:var(--green); border-color:var(--green); color:#fff; }
   .sheet button.bad { color:var(--red); border-color:var(--red); }
-  .cell.gone img { opacity:.35; filter:grayscale(1); }
   @keyframes up { from { transform: translateY(40px); opacity:0; } to { transform:none; opacity:1; } }
 
   /* Drawing on a photo */
-  .ed { position:fixed; inset:0; background:#111; z-index:30; display:flex; flex-direction:column; color:#fff; }
-  .ed-top, .ed-tools { display:flex; align-items:center; gap:8px; padding:10px 12px; flex-wrap:wrap; }
-  .ed-top { justify-content:space-between; padding-top: calc(10px + env(safe-area-inset-top)); }
+  .ed { position:fixed; inset:0; background:#101010; z-index:30; display:flex; flex-direction:column; color:#fff; }
+  .ed-top { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; padding-top: calc(10px + env(safe-area-inset-top)); }
   .ed-top b { font-size:17px; }
   .ed-stage { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:6px; }
   .ed-stage canvas { max-width:100%; max-height:100%; touch-action:none; background:#222; }
-  .ed-tools { justify-content:center; padding-bottom: calc(12px + env(safe-area-inset-bottom)); background:#1b1b1b; }
-  .ed button { font:inherit; font-size:15px; font-weight:700; padding:10px 14px; border:2px solid #444; background:#262626; color:#fff; cursor:pointer; }
-  .ed button.on { border-color:#fff; background:#3a3a3a; }
-  .ed button.go { background:var(--green); border-color:var(--green); }
-  .ed .sw { width:34px; height:34px; padding:0; border-radius:50%; border:3px solid #444; }
-  .ed .sw.on { border-color:#fff; box-shadow:0 0 0 2px #111 inset; }
-  .ed .sep { width:1px; height:28px; background:#444; margin:0 4px; }
+  .ed-panel { background:#1c1c1c; padding:12px 12px calc(14px + env(safe-area-inset-bottom)); display:grid; gap:12px; }
+  .ed-row { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .ed button { font:inherit; font-weight:700; color:#fff; cursor:pointer; }
+  .ed-top button { font-size:16px; padding:10px 16px; border:2px solid #444; background:#262626; }
+  .ed-top button.go { background:var(--green); border-color:var(--green); }
+  .ed-seg { display:flex; border:2px solid #3a3a3a; }
+  .ed-seg button { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:84px; padding:8px 12px; font-size:14px; background:#262626; border:0; border-right:2px solid #3a3a3a; }
+  .ed-seg button:last-child { border-right:0; }
+  .ed-seg button svg { width:24px; height:24px; }
+  .ed-seg button.on { background:#fff; color:#111; }
+  .ed-sw { width:44px; height:44px; border-radius:50%; border:3px solid #1c1c1c; box-shadow:0 0 0 2px #555; padding:0; }
+  .ed-sw.on { box-shadow:0 0 0 3px #fff; transform: scale(1.08); }
+  .ed-act { display:flex; align-items:center; gap:6px; padding:10px 18px; font-size:15px; background:#262626; border:2px solid #444; }
+  .ed-act svg { width:20px; height:20px; }
+  .ed-act:disabled { opacity:.35; cursor:default; }
 </style>
 </head>
 <body>
 <header>
   <h1>Add photos</h1>
-  <p>Photos go straight into your report.</p>
+  <p>Take or choose photos, then tap Add at the bottom.</p>
 </header>
 <main>
   <div class="actions">
@@ -94,37 +102,36 @@
     <input type="file" id="libInput" accept="image/*" multiple>
   </div>
 
-  <div class="count" id="count">Photos added</div>
-  <p class="hint" id="addedHint" style="display:none">Tap a photo to draw on it or take it out of the report.</p>
+  <div class="count" id="count">Photos to add</div>
+  <p class="hint" id="trayHint" style="display:none">Tap a photo to draw on it or remove it.</p>
   <div class="empty" id="empty">No photos yet</div>
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="tray"></div>
   <div class="note" id="status"></div>
 
   <div id="recentWrap" style="display:none">
     <div class="count"><span>Recent photos</span><button type="button" id="clearRecent">Clear</button></div>
-    <p class="hint">The last 20 photos taken here are kept on this device, even without signal. Tap one to add it again.</p>
+    <p class="hint">The last 20 photos taken here are kept on this device, even without signal. Tap one to add it.</p>
     <div class="grid" id="recent"></div>
   </div>
 </main>
-<footer><button id="doneBtn" type="button">Done</button></footer>
+<footer><button id="doneBtn" type="button" class="idle">Close</button></footer>
 <script>
 (function () {
-  // Opened by the checklist app in a popup. Each photo is shrunk and handed
-  // straight back to the app with postMessage. Tapping an added photo lets
-  // you draw on it or take it back out (while the report isn't saved yet).
-  // The last 20 are also kept on this device (IndexedDB) so they can be
-  // added again later, for example after losing signal. No server is involved.
+  // Opened by the checklist app in a popup. Photos taken or chosen here wait
+  // in "Photos to add", where they can be drawn on or removed. The Add button
+  // hands them all to the app (postMessage) and closes the window. The last
+  // 20 are also kept on this device (IndexedDB) so they can be added again,
+  // for example after losing signal. No server is involved.
   var params = new URLSearchParams(location.search);
   var appOrigin = params.get('o');
   var MAX_DIM = 1600, QUALITY = 0.8, KEEP = 20;
-  var grid = document.getElementById('grid'), statusEl = document.getElementById('status');
+  var trayEl = document.getElementById('tray'), statusEl = document.getElementById('status');
   var emptyEl = document.getElementById('empty'), countEl = document.getElementById('count');
-  var sent = 0;
-  var shown = {};   // photos added this time, by id: { cell, img, badge, data, thumb, removed }
+  var doneBtn = document.getElementById('doneBtn');
+  var tray = [];   // { id, data, thumb, drawn, busy }
 
   // Works offline once opened with signal at least once.
   if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {} }
-
 
   // ---------- photos kept on this device ----------
   var dbP = null;
@@ -142,7 +149,7 @@
   function tx(mode, fn) {
     return db().then(function (d) {
       return new Promise(function (resolve, reject) {
-        var t = d.transaction('recent', mode), store = t.objectStore('recent'), out = fn(store);
+        var t = d.transaction('recent', mode), out = fn(t.objectStore('recent'));
         t.oncomplete = function () { resolve(out && out.result !== undefined ? out.result : out); };
         t.onerror = function () { reject(t.error); };
       });
@@ -154,9 +161,8 @@
       var old = list.slice(KEEP);
       if (!old.length) return;
       return tx('readwrite', function (s) { old.forEach(function (p) { s.delete(p.id); }); });
-    }).catch(function () { /* storage full or blocked: the photo was still added */ });
+    }).catch(function () { /* storage full or blocked: the photo can still be added */ });
   }
-
   function whenText(at) {
     var d = new Date(at), now = new Date();
     var t = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
@@ -169,28 +175,78 @@
       host.innerHTML = '';
       wrap.style.display = list.length ? '' : 'none';
       list.forEach(function (p) {
-        var cell = document.createElement('div'); cell.className = 'cell tap';
+        var cell = document.createElement('button'); cell.type = 'button'; cell.className = 'cell';
         var img = new Image(); img.src = p.thumb; img.alt = 'Recent photo';
         var w = document.createElement('div'); w.className = 'when'; w.textContent = whenText(p.at);
         cell.appendChild(img); cell.appendChild(w);
-        cell.addEventListener('click', function () { chooseRecent(p); });
+        cell.addEventListener('click', function () {
+          sheet('data:image/jpeg;base64,' + p.data, 'Add this photo?', [
+            { text: 'Yes, add it', cls: 'go', fn: function () { addToTray({ data: p.data, thumb: p.thumb }, p.id); } }
+          ], 'No');
+        });
         host.appendChild(cell);
       });
     });
   }
   document.getElementById('clearRecent').addEventListener('click', function () {
-    if (!confirm('Remove the recent photos from this device? Photos already added to reports are not affected.')) return;
+    if (!confirm('Remove the recent photos from this device? Photos already in reports are not affected.')) return;
     tx('readwrite', function (s) { s.clear(); }).then(showRecent);
   });
 
-  function chooseRecent(p) {
-    sheet('data:image/jpeg;base64,' + p.data, [
-      { text: 'Add this photo', cls: 'go', fn: function () { deliver(Promise.resolve({ data: p.data, thumb: p.thumb }), false); } },
-      { text: 'Draw on it, then add', fn: function () {
-        loadImage('data:image/jpeg;base64,' + p.data).then(function (im) { openEditor(im, function (res) { deliver(Promise.resolve(res), true); }); });
+  // ---------- the photos waiting to be added ----------
+  function newId() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
+  function renderTray() {
+    trayEl.innerHTML = '';
+    emptyEl.style.display = tray.length ? 'none' : '';
+    document.getElementById('trayHint').style.display = tray.some(function (p) { return p.data; }) ? '' : 'none';
+    tray.forEach(function (p) {
+      var cell = document.createElement('button'); cell.type = 'button'; cell.className = 'cell';
+      if (p.thumb) { var img = new Image(); img.src = p.thumb; img.alt = 'Photo to add'; cell.appendChild(img); }
+      if (p.drawn) { var dr = document.createElement('div'); dr.className = 'drawn'; dr.textContent = 'Drawn on'; cell.appendChild(dr); }
+      if (p.busy || p.error) { var b = document.createElement('div'); b.className = 'badge' + (p.error ? ' err' : ''); b.textContent = p.error ? 'Could not read' : 'Preparing…'; cell.appendChild(b); }
+      cell.addEventListener('click', function () { if (p.data) choosePhoto(p); else if (p.error) { tray.splice(tray.indexOf(p), 1); renderTray(); } });
+      trayEl.appendChild(cell);
+    });
+    var n = tray.filter(function (p) { return p.data; }).length;
+    countEl.textContent = n ? n + (n === 1 ? ' photo to add' : ' photos to add') : 'Photos to add';
+    doneBtn.textContent = n ? 'Add ' + n + (n === 1 ? ' photo' : ' photos') : 'Close';
+    doneBtn.className = n ? '' : 'idle';
+  }
+  function addToTray(res, recentId) {
+    var p = { id: newId(), data: res.data, thumb: res.thumb, recentId: recentId || '' };
+    tray.unshift(p); renderTray();
+    if (navigator.vibrate) navigator.vibrate(15);
+    return p;
+  }
+
+  /** Tapping a waiting photo: draw on it, or take it out. */
+  function choosePhoto(p) {
+    sheet('data:image/jpeg;base64,' + p.data, '', [
+      { text: 'Draw on it', cls: 'go', fn: function () {
+        loadImage('data:image/jpeg;base64,' + p.data).then(function (im) {
+          openEditor(im, function (res) {
+            p.data = res.data; p.thumb = res.thumb; p.drawn = true; renderTray();
+            keep({ id: p.recentId || p.id, at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
+          });
+        });
       } },
-      { text: 'Delete from this device', cls: 'bad', fn: function () { tx('readwrite', function (st) { st.delete(p.id); }).then(showRecent); } }
-    ]);
+      { text: 'Remove', cls: 'bad', fn: function () { tray.splice(tray.indexOf(p), 1); renderTray(); } }
+    ], 'Cancel');
+  }
+
+  function sheet(imgSrc, question, buttons, cancelText) {
+    var bg = document.createElement('div'); bg.className = 'sheet-bg';
+    var sh = document.createElement('div'); sh.className = 'sheet';
+    var img = new Image(); img.src = imgSrc; sh.appendChild(img);
+    if (question) { var q = document.createElement('p'); q.textContent = question; sh.appendChild(q); }
+    function close() { bg.remove(); }
+    buttons.concat([{ text: cancelText || 'Cancel' }]).forEach(function (b) {
+      var el = document.createElement('button'); el.type = 'button'; el.textContent = b.text; if (b.cls) el.className = b.cls;
+      el.addEventListener('click', function () { close(); if (b.fn) b.fn(); });
+      sh.appendChild(el);
+    });
+    bg.appendChild(sh); document.body.appendChild(bg);
+    bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
   }
 
   // ---------- preparing a photo ----------
@@ -215,104 +271,17 @@
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
     return c;
   }
-
-  function newId() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
-  function updateCount() {
-    countEl.textContent = sent ? sent + (sent === 1 ? ' photo added' : ' photos added') : 'Photos added';
-    document.getElementById('doneBtn').textContent = sent ? 'Done (' + sent + ')' : 'Done';
-    document.getElementById('addedHint').style.display = Object.keys(shown).some(function (k) { return !shown[k].removed; }) ? '' : 'none';
-  }
-
-  /** Adds one photo to the report (and keeps it on the device). */
-  function deliver(promise, store) {
-    emptyEl.style.display = 'none';
-    var id = newId();
-    var cell = document.createElement('div'); cell.className = 'cell';
-    var badge = document.createElement('div'); badge.className = 'badge'; badge.textContent = 'Preparing…';
-    cell.appendChild(badge); grid.insertBefore(cell, grid.firstChild);
-    promise.then(function (res) {
-      var img = new Image(); img.src = res.thumb; cell.insertBefore(img, badge);
-      if (store) keep({ id: id, at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
-      if (!window.opener || !appOrigin) throw new Error('Lost connection to the checklist. The photo is kept under Recent photos: close this window, open Add photos from the checklist again and tap it.');
-      window.opener.postMessage({ type: 'pc-photo', id: id, mime: 'image/jpeg', data: res.data }, appOrigin);
-      shown[id] = { cell: cell, img: img, badge: badge, data: res.data, thumb: res.thumb, removed: false };
-      cell.classList.add('tap');
-      cell.addEventListener('click', function () { if (!shown[id].removed) chooseAdded(id); });
-      badge.textContent = 'Added'; badge.className = 'badge ok'; sent++;
-      updateCount();
-      statusEl.textContent = '';
-      if (navigator.vibrate) navigator.vibrate(15);
-    }).catch(function (e) {
-      badge.textContent = 'Not added'; badge.className = 'badge err';
-      statusEl.textContent = (e && e.message) || 'Something went wrong. Please try again.';
-    });
-  }
-
-  // Changes to a photo already added are confirmed by the checklist, which
-  // only allows them while the photo hasn't been saved in the report yet.
-  var waiting = {};
-  window.addEventListener('message', function (ev) {
-    var d = ev.data;
-    if (!d || d.type !== 'pc-photo-done' || ev.origin !== appOrigin || !waiting[d.id]) return;
-    var w = waiting[d.id]; delete waiting[d.id]; clearTimeout(w.timer); w.done(!!d.ok, false);
-  });
-  function ask(msg, done) {
-    if (!window.opener || !appOrigin) { done(false, true); return; }
-    waiting[msg.id] = { done: done, timer: setTimeout(function () { if (waiting[msg.id]) { delete waiting[msg.id]; done(false, true); } }, 4000) };
-    window.opener.postMessage(msg, appOrigin);
-  }
-  var TOO_LATE = 'That photo has already been saved in the report, so it can’t be changed from here. You can remove it in the checklist.';
-  var NO_ANSWER = 'The checklist didn’t answer. Is it still open? Nothing was changed.';
-
-  /** A sheet that slides up with the photo and some choices. */
-  function sheet(imgSrc, buttons) {
-    var bg = document.createElement('div'); bg.className = 'sheet-bg';
-    var sh = document.createElement('div'); sh.className = 'sheet';
-    var img = new Image(); img.src = imgSrc; sh.appendChild(img);
-    function close() { bg.remove(); }
-    buttons.concat([{ text: 'Cancel' }]).forEach(function (b) {
-      var el = document.createElement('button'); el.type = 'button'; el.textContent = b.text; if (b.cls) el.className = b.cls;
-      el.addEventListener('click', function () { close(); if (b.fn) b.fn(); });
-      sh.appendChild(el);
-    });
-    bg.appendChild(sh); document.body.appendChild(bg);
-    bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
-  }
-
-  /** A photo already added: draw on it, or take it back out of the report. */
-  function chooseAdded(id) {
-    var p = shown[id];
-    sheet('data:image/jpeg;base64,' + p.data, [
-      { text: 'Draw on it', cls: 'go', fn: function () {
-        loadImage('data:image/jpeg;base64,' + p.data).then(function (im) {
-          openEditor(im, function (res) {
-            p.badge.textContent = 'Updating…'; p.badge.className = 'badge';
-            ask({ type: 'pc-photo-replace', id: id, mime: 'image/jpeg', data: res.data }, function (ok, noAnswer) {
-              p.badge.textContent = 'Added'; p.badge.className = 'badge ok';
-              if (ok) {
-                p.data = res.data; p.thumb = res.thumb; p.img.src = res.thumb;
-                keep({ id: id, at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
-                statusEl.textContent = '';
-              } else statusEl.textContent = noAnswer ? NO_ANSWER : TOO_LATE;
-            });
-          });
-        });
-      } },
-      { text: 'Remove from the report', cls: 'bad', fn: function () {
-        ask({ type: 'pc-photo-remove', id: id }, function (ok, noAnswer) {
-          if (ok) {
-            p.removed = true; p.cell.classList.add('gone'); p.cell.classList.remove('tap');
-            p.badge.textContent = 'Removed'; p.badge.className = 'badge err';
-            sent--; updateCount(); statusEl.textContent = '';
-          } else statusEl.textContent = noAnswer ? NO_ANSWER : TOO_LATE;
-        });
-      } }
-    ]);
-  }
-
   function handle(file) {
+    var p = { id: newId(), busy: true };
+    tray.unshift(p); renderTray();
     var url = URL.createObjectURL(file);
-    deliver(loadImage(url).then(function (img) { URL.revokeObjectURL(url); return toResult(shrunkCanvas(img)); }), true);
+    loadImage(url).then(function (img) {
+      URL.revokeObjectURL(url);
+      var res = toResult(shrunkCanvas(img));
+      p.data = res.data; p.thumb = res.thumb; p.busy = false; p.recentId = p.id;
+      keep({ id: p.id, at: Date.now(), data: res.data, thumb: res.thumb }).then(showRecent);
+      renderTray();
+    }).catch(function () { URL.revokeObjectURL(url); p.busy = false; p.error = true; renderTray(); });
   }
   function onPick(e) {
     Array.prototype.forEach.call(e.target.files, handle);
@@ -320,30 +289,63 @@
   }
   document.getElementById('camInput').addEventListener('change', onPick);
   document.getElementById('libInput').addEventListener('change', onPick);
-  document.getElementById('doneBtn').addEventListener('click', function () { window.close(); });
+
+  // ---------- Add: hand the photos to the checklist ----------
+  doneBtn.addEventListener('click', function () {
+    var ready = tray.filter(function (p) { return p.data; });
+    if (!ready.length) { window.close(); return; }
+    if (tray.some(function (p) { return p.busy; })) { statusEl.textContent = 'One photo is still being prepared. Try again in a moment.'; return; }
+    if (!window.opener || !appOrigin) {
+      statusEl.textContent = 'Lost connection to the checklist. The photos are kept under Recent photos: close this window, open Add photos from the checklist again and tap them.';
+      return;
+    }
+    ready.slice().reverse().forEach(function (p) {   // oldest first, the order they were taken
+      window.opener.postMessage({ type: 'pc-photo', id: p.id, mime: 'image/jpeg', data: p.data }, appOrigin);
+    });
+    tray = []; renderTray();
+    window.close();
+  });
+  // Leaving with photos still waiting asks first (they stay under Recent photos anyway).
+  window.addEventListener('beforeunload', function (e) { if (tray.some(function (p) { return p.data; })) { e.preventDefault(); e.returnValue = ''; } });
 
   // ---------- drawing on a photo ----------
-  // Pen, ring (circle round something) and a pointer line with a head.
-  // Marks are kept as a list so Undo can take the last one off.
-  function openEditor(img, onDone, onCancel, more) {
+  // Pen, circle (a ring round something) and pointer (a line with a head).
+  // Each mark is kept in a list so Undo takes the last one off.
+  var ICONS = {
+    pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c4-1 5-6 9-9s6-4 7-7"/></svg>',
+    ring: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg>',
+    pointer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20L6 6"/><path d="M6 13V6h7"/></svg>',
+    undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>'
+  };
+  var COLOURS = [['#ff2d2d', 'Red'], ['#ffd400', 'Yellow'], ['#20c060', 'Green'], ['#2f80ff', 'Blue'], ['#ffffff', 'White']];
+  var lastTool = 'ring', lastColour = COLOURS[0][0];
+
+  function openEditor(img, onDone) {
     var base = shrunkCanvas(img);
-    var W = base.width, H = base.height, unit = Math.max(W, H) / 200;
-    var marks = [], tool = 'pen', colour = '#ff2d2d', cur = null;
+    var W = base.width, H = base.height, unit = Math.max(W, H) / 170;
+    var marks = [], tool = lastTool, colour = lastColour, cur = null;
 
     var ed = document.createElement('div'); ed.className = 'ed';
     ed.innerHTML =
-      '<div class="ed-top"><button type="button" data-a="cancel">Cancel</button><b>Draw on the photo</b><button type="button" class="go" data-a="done">' + (more ? 'Add, next photo' : 'Done') + '</button></div>' +
+      '<div class="ed-top"><button type="button" data-a="cancel">Cancel</button><b>Draw on the photo</b><button type="button" class="go" data-a="done">Done</button></div>' +
       '<div class="ed-stage"><canvas></canvas></div>' +
-      '<div class="ed-tools">' +
-        '<button type="button" data-t="pen" class="on">Pen</button><button type="button" data-t="ring">Circle</button><button type="button" data-t="pointer">Pointer</button>' +
-        '<span class="sep"></span>' +
-        ['#ff2d2d', '#ffd400', '#20c060', '#ffffff', '#111111'].map(function (c, i) { return '<button type="button" class="sw' + (i ? '' : ' on') + '" data-c="' + c + '" style="background:' + c + '" aria-label="Colour"></button>'; }).join('') +
-        '<span class="sep"></span><button type="button" data-a="undo">Undo</button><button type="button" data-a="clear">Clear</button>' +
+      '<div class="ed-panel">' +
+        '<div class="ed-row"><div class="ed-seg">' +
+          [['pen', 'Pen'], ['ring', 'Circle'], ['pointer', 'Pointer']].map(function (t) { return '<button type="button" data-t="' + t[0] + '">' + ICONS[t[0]] + t[1] + '</button>'; }).join('') +
+        '</div></div>' +
+        '<div class="ed-row">' + COLOURS.map(function (c) { return '<button type="button" class="ed-sw" data-c="' + c[0] + '" style="background:' + c[0] + '" aria-label="' + c[1] + '" title="' + c[1] + '"></button>'; }).join('') + '</div>' +
+        '<div class="ed-row"><button type="button" class="ed-act" data-a="undo">' + ICONS.undo + 'Undo</button><button type="button" class="ed-act" data-a="clear">Start again</button></div>' +
       '</div>';
     document.body.appendChild(ed);
     var cv = ed.querySelector('canvas'), ctx = cv.getContext('2d');
     cv.width = W; cv.height = H;
 
+    function refreshTools() {
+      ed.querySelectorAll('[data-t]').forEach(function (x) { x.classList.toggle('on', x.dataset.t === tool); });
+      ed.querySelectorAll('[data-c]').forEach(function (x) { x.classList.toggle('on', x.dataset.c === colour); });
+      ed.querySelector('[data-a="undo"]').disabled = !marks.length;
+      ed.querySelector('[data-a="clear"]').disabled = !marks.length;
+    }
     function head(c, x1, y1, x2, y2, w) {
       var a = Math.atan2(y2 - y1, x2 - x1), l = w * 4.5;
       c.beginPath(); c.moveTo(x2, y2);
@@ -353,6 +355,8 @@
     }
     function drawMark(c, m) {
       c.strokeStyle = c.fillStyle = m.c; c.lineWidth = m.w; c.lineCap = c.lineJoin = 'round';
+      // a thin dark edge so marks show up on light and dark photos
+      c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = m.w * 0.8;
       if (m.t === 'pen') {
         c.beginPath(); m.p.forEach(function (pt, i) { if (i) c.lineTo(pt[0], pt[1]); else c.moveTo(pt[0], pt[1]); });
         if (m.p.length === 1) c.lineTo(m.p[0][0] + 0.1, m.p[0][1]);
@@ -364,11 +368,13 @@
         c.beginPath(); c.moveTo(m.x1, m.y1); c.lineTo(m.x2, m.y2); c.stroke();
         if (Math.hypot(m.x2 - m.x1, m.y2 - m.y1) > m.w * 2) head(c, m.x1, m.y1, m.x2, m.y2, m.w);
       }
+      c.shadowBlur = 0; c.shadowColor = 'transparent';
     }
     function paint() {
       ctx.drawImage(base, 0, 0);
       marks.forEach(function (m) { drawMark(ctx, m); });
       if (cur) drawMark(ctx, cur);
+      refreshTools();
     }
     paint();
 
@@ -380,7 +386,7 @@
       e.preventDefault();
       var p = at(e);
       try { cv.setPointerCapture(e.pointerId); } catch (x) {}
-      cur = tool === 'pen' ? { t: 'pen', c: colour, w: unit * 1.2, p: [p] } : { t: tool, c: colour, w: unit * 1.2, x1: p[0], y1: p[1], x2: p[0], y2: p[1] };
+      cur = tool === 'pen' ? { t: 'pen', c: colour, w: unit, p: [p] } : { t: tool, c: colour, w: unit, x1: p[0], y1: p[1], x2: p[0], y2: p[1] };
       paint();
     });
     cv.addEventListener('pointermove', function (e) {
@@ -395,18 +401,19 @@
 
     ed.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
-      if (b.dataset.t) { tool = b.dataset.t; ed.querySelectorAll('[data-t]').forEach(function (x) { x.classList.toggle('on', x === b); }); }
-      else if (b.dataset.c) { colour = b.dataset.c; ed.querySelectorAll('[data-c]').forEach(function (x) { x.classList.toggle('on', x === b); }); }
+      if (b.dataset.t) { tool = lastTool = b.dataset.t; refreshTools(); }
+      else if (b.dataset.c) { colour = lastColour = b.dataset.c; refreshTools(); }
       else if (b.dataset.a === 'undo') { marks.pop(); paint(); }
       else if (b.dataset.a === 'clear') { if (marks.length && confirm('Remove everything drawn on this photo?')) { marks = []; paint(); } }
       else if (b.dataset.a === 'cancel') {
-        if (marks.length && !confirm('Leave without adding this photo?')) return;
-        ed.remove(); if (onCancel) onCancel();
+        if (marks.length && !confirm('Leave without keeping what you drew?')) return;
+        ed.remove();
       }
-      else if (b.dataset.a === 'done') { cur = null; paint(); var res = toResult(cv); ed.remove(); onDone(res); }
+      else if (b.dataset.a === 'done') { cur = null; paint(); var res = marks.length ? toResult(cv) : null; ed.remove(); if (res) onDone(res); }
     });
   }
 
+  renderTray();
   showRecent();
 })();
 </script>
